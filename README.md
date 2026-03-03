@@ -1,4 +1,4 @@
-# monero-ndk — Build Android NDK From Source
+# monero-ndk
 
 Build a minimal, reproducible Android NDK toolchain entirely from source.
 
