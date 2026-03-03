@@ -147,6 +147,7 @@ for arch in ${ARCHES}; do
         -DCMAKE_C_FLAGS="--target=${target}" \
         -DCMAKE_CXX_FLAGS="--target=${target}" \
         -DCMAKE_ASM_FLAGS="--target=${target}" \
+        -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
         -DLLVM_ENABLE_RUNTIMES="libunwind;libcxxabi;libcxx" \
         -DLIBUNWIND_ENABLE_SHARED=OFF \
         -DLIBUNWIND_ENABLE_STATIC=ON \
