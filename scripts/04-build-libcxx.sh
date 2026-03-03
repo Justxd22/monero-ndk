@@ -85,7 +85,7 @@ for arch in ${ARCHES}; do
         -DANDROID=ON \
         -DANDROID_NATIVE_API_LEVEL="${API_LEVEL}"
 
-    ninja -C "$build_dir" -j"${NUM_CORES}"
+    ninja -C "$build_dir" -j"${BUILD_JOBS}"
     ninja -C "$build_dir" install
 
     # Verify output

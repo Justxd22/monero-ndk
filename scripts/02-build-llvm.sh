@@ -84,8 +84,9 @@ CMAKE_FLAGS=(
     -DCOMPILER_RT_BUILD_MEMPROF=OFF
     -DCOMPILER_RT_BUILD_ORC=OFF
 
-    # Memory-safe build for 16GB RAM
-    -DLLVM_PARALLEL_LINK_JOBS=1
+    # Dynamically limit link jobs based on available RAM
+    # Each link job can use 10-14GB, so cap at total_ram / 10GB
+    -DLLVM_PARALLEL_LINK_JOBS=${LLVM_LINK_JOBS}
 )
 
 # Use lld if available on host (faster + less memory)
@@ -104,10 +105,10 @@ cmake -S "${LLVM_SRC}/llvm" -B "${BUILD_DIR}" -G Ninja "${CMAKE_FLAGS[@]}"
 # ---- Step 3: Build ----
 echo ""
 echo "[BUILD] Building LLVM (this will take a while)..."
-echo "        Cores: ${NUM_CORES}, Link jobs: 1"
+echo "        RAM: ${TOTAL_RAM_GB} GB, Build jobs: ${BUILD_JOBS}, Link jobs: ${LLVM_LINK_JOBS}"
 echo ""
 
-ninja -C "${BUILD_DIR}" -j"${NUM_CORES}"
+ninja -C "${BUILD_DIR}" -j"${BUILD_JOBS}"
 
 # ---- Step 4: Install ----
 echo ""

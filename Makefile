@@ -36,12 +36,4 @@ distclean: clean
 
 # Print configuration
 info:
-	@echo "LLVM commit:      $(LLVM_COMMIT)"
-	@echo "Bionic commit:    $(BIONIC_COMMIT)"
-	@echo "API level:        $(API_LEVEL)"
-	@echo "Architectures:    $(ARCHES)"
-	@echo "Host:             $(HOST_OS)-$(HOST_ARCH)"
-	@echo "Cores:            $(NUM_CORES)"
-	@echo "Sources dir:      $(SOURCES_DIR)"
-	@echo "Build dir:        $(BUILD_DIR)"
-	@echo "Output dir:       $(OUTPUT_DIR)"
+	@bash -c 'source config.sh && echo "LLVM commit:      $$LLVM_COMMIT" && echo "Bionic commit:    $$BIONIC_COMMIT" && echo "API level:        $$API_LEVEL" && echo "Architectures:    $$ARCHES" && echo "Cores:            $$NUM_CORES" && echo "RAM:              $${TOTAL_RAM_GB} GB" && echo "Build jobs:       $$BUILD_JOBS" && echo "Link jobs:        $$LLVM_LINK_JOBS" && echo "Sources dir:      $$SOURCES_DIR" && echo "Build dir:        $$BUILD_DIR" && echo "Output dir:       $$OUTPUT_DIR"'
