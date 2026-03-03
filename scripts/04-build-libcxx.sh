@@ -5,7 +5,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-source <(grep -E '^[A-Z_]+\s*:?=' "$ROOT_DIR/config.mk" | sed 's/ *:= */=/;s/ *=  */=/')
+source "$ROOT_DIR/config.sh"
 
 SOURCES_DIR="${ROOT_DIR}/sources"
 LLVM_SRC="${SOURCES_DIR}/llvm-project"
