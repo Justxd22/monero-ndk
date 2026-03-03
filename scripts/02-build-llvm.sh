@@ -74,15 +74,8 @@ CMAKE_FLAGS=(
     -DCLANG_INCLUDE_TESTS=OFF
     -DCLANG_INCLUDE_DOCS=OFF
 
-    # compiler-rt builtins (needed for Android)
-    -DCOMPILER_RT_BUILD_BUILTINS=ON
-    -DCOMPILER_RT_DEFAULT_TARGET_ONLY=OFF
-    -DCOMPILER_RT_BUILD_SANITIZERS=OFF
-    -DCOMPILER_RT_BUILD_XRAY=OFF
-    -DCOMPILER_RT_BUILD_LIBFUZZER=OFF
-    -DCOMPILER_RT_BUILD_PROFILE=OFF
-    -DCOMPILER_RT_BUILD_MEMPROF=OFF
-    -DCOMPILER_RT_BUILD_ORC=OFF
+    # Note: compiler-rt builtins for Android targets are cross-compiled
+    # separately in 04-build-runtimes.sh using the host clang we build here
 
     # Dynamically limit link jobs based on available RAM
     # Each link job can use 10-14GB, so cap at total_ram / 10GB

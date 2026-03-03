@@ -21,23 +21,48 @@ jobs:
           sudo apt-get install -y cmake ninja-build python3 python3-pip \
             git build-essential lld
 
-      - name: Cache AOSP sources
-        uses: actions/cache@v4
+      - name: Print build info
+        run: make info
+
+      - name: Restore AOSP sources cache
+        id: cache-sources
+        uses: actions/cache/restore@v4
         with:
           path: sources/
-          key: aosp-sources-${{ hashFiles('config.mk') }}
+          key: aosp-sources-${{ hashFiles('config.sh') }}
 
       - name: Fetch sources
         run: make fetch
 
+      - name: Save AOSP sources cache
+        if: steps.cache-sources.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: sources/
+          key: aosp-sources-${{ hashFiles('config.sh') }}
+
+      - name: Restore LLVM build cache
+        id: cache-llvm
+        uses: actions/cache/restore@v4
+        with:
+          path: build/llvm-install/
+          key: llvm-build-${{ hashFiles('config.sh', 'scripts/02-build-llvm.sh') }}
+
       - name: Build LLVM
         run: make llvm
+
+      - name: Save LLVM build cache
+        if: steps.cache-llvm.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/llvm-install/
+          key: llvm-build-${{ hashFiles('config.sh', 'scripts/02-build-llvm.sh') }}
 
       - name: Build sysroot
         run: make sysroot
 
-      - name: Build libc++
-        run: make libcxx
+      - name: Build runtimes
+        run: make runtimes
 
       - name: Assemble NDK
         run: make assemble

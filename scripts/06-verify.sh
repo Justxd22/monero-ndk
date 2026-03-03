@@ -117,9 +117,26 @@ for arch in ${ARCHES}; do
     check "${triple}/libc.so (API ${API_LEVEL})" "${lib_dir}/${API_LEVEL}/libc.so"
     check "${triple}/libc++_static.a" "${lib_dir}/libc++_static.a"
     check "${triple}/libc++abi.a" "${lib_dir}/libc++abi.a"
+    check "${triple}/libunwind.a" "${lib_dir}/libunwind.a"
 done
 
-# ---- Check 7: Test compilation ----
+# ---- Check 7: Compiler-rt builtins ----
+echo ""
+echo "--- Compiler-rt builtins ---"
+
+declare -A RT_ARCH
+RT_ARCH[aarch64]="aarch64"
+RT_ARCH[armv7a]="arm"
+RT_ARCH[x86_64]="x86_64"
+
+# Find clang version for resource dir path
+CLANG_VER=$("${OUTPUT_DIR}/bin/clang" --version 2>/dev/null | head -1 | grep -oP '\d+' | head -1 || echo "19")
+for arch in ${ARCHES}; do
+    rt_arch="${RT_ARCH[$arch]}"
+    check "builtins-${rt_arch}-android" "${OUTPUT_DIR}/lib/clang/${CLANG_VER}/lib/linux/libclang_rt.builtins-${rt_arch}-android.a"
+done
+
+# ---- Check 8: Test compilation ----
 echo ""
 echo "--- Test compilation ---"
 

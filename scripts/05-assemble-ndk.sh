@@ -9,7 +9,7 @@ source "$ROOT_DIR/config.sh"
 
 LLVM_INSTALL="${ROOT_DIR}/build/llvm-install"
 SYSROOT_DIR="${ROOT_DIR}/output/sysroot"
-LIBCXX_DIR="${ROOT_DIR}/build/libcxx"
+RUNTIMES_DIR="${ROOT_DIR}/build/runtimes"
 OUTPUT_DIR="${ROOT_DIR}/output"
 
 # Sysroot lib triple mapping
@@ -94,16 +94,16 @@ if [ -d "${LLVM_INSTALL}/lib/linux" ]; then
     cp -a "${LLVM_INSTALL}/lib/linux/"* "${OUTPUT_DIR}/lib/linux/" 2>/dev/null || true
 fi
 
-# ---- Step 5: Install libc++ into sysroot ----
-echo "[LIBCXX] Installing libc++ into sysroot..."
+# ---- Step 5: Install libc++ and libunwind into sysroot ----
+echo "[LIBCXX] Installing libc++ and libunwind into sysroot..."
 
 for arch in ${ARCHES}; do
     triple="${SYSROOT_TRIPLE[$arch]}"
-    install_dir="${LIBCXX_DIR}/${arch}-install"
+    install_dir="${RUNTIMES_DIR}/${arch}-install"
     target_lib_dir="${SYSROOT_DIR}/usr/lib/${triple}"
 
     if [ ! -d "$install_dir" ]; then
-        echo "        [WARN] libc++ not found for ${arch}"
+        echo "        [WARN] Runtimes not found for ${arch}"
         continue
     fi
 
@@ -112,13 +112,14 @@ for arch in ${ARCHES}; do
     cp -f "${install_dir}/lib/libc++_static.a" "$target_lib_dir/" 2>/dev/null || true
     cp -f "${install_dir}/lib/libc++abi.a" "$target_lib_dir/" 2>/dev/null || true
     cp -f "${install_dir}/lib/libc++.a" "$target_lib_dir/" 2>/dev/null || true
+    cp -f "${install_dir}/lib/libunwind.a" "$target_lib_dir/" 2>/dev/null || true
 
     echo "        [OK] ${arch}: installed to ${target_lib_dir}"
 done
 
 # Copy C++ headers (from first arch — they're the same for all)
 first_arch=$(echo "${ARCHES}" | awk '{print $1}')
-cxx_headers="${LIBCXX_DIR}/${first_arch}-install/include"
+cxx_headers="${RUNTIMES_DIR}/${first_arch}-install/include"
 if [ -d "$cxx_headers" ]; then
     mkdir -p "${SYSROOT_DIR}/usr/include"
     cp -a "$cxx_headers"/* "${SYSROOT_DIR}/usr/include/" 2>/dev/null || true

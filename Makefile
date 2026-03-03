@@ -1,8 +1,8 @@
 include config.mk
 
-.PHONY: all fetch llvm sysroot libcxx assemble verify clean
+.PHONY: all fetch llvm sysroot runtimes assemble verify clean
 
-all: fetch llvm sysroot libcxx assemble verify
+all: fetch llvm sysroot runtimes assemble verify
 
 fetch:
 	@echo "=== Phase 1: Fetching sources ==="
@@ -16,11 +16,11 @@ sysroot: fetch
 	@echo "=== Phase 3: Assembling sysroot ==="
 	bash scripts/03-build-sysroot.sh
 
-libcxx: llvm sysroot
-	@echo "=== Phase 4: Building libc++ ==="
-	bash scripts/04-build-libcxx.sh
+runtimes: llvm sysroot
+	@echo "=== Phase 4: Building runtimes ==="
+	bash scripts/04-build-runtimes.sh
 
-assemble: llvm sysroot libcxx
+assemble: llvm sysroot runtimes
 	@echo "=== Phase 5: Assembling NDK ==="
 	bash scripts/05-assemble-ndk.sh
 
