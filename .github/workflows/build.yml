@@ -1,0 +1,69 @@
+name: Build NDK from Source
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 python3-pip \
+            git build-essential lld
+
+      - name: Cache AOSP sources
+        uses: actions/cache@v4
+        with:
+          path: sources/
+          key: aosp-sources-${{ hashFiles('config.mk') }}
+
+      - name: Fetch sources
+        run: make fetch
+
+      - name: Build LLVM
+        run: make llvm
+
+      - name: Build sysroot
+        run: make sysroot
+
+      - name: Build libc++
+        run: make libcxx
+
+      - name: Assemble NDK
+        run: make assemble
+
+      - name: Verify
+        run: make verify
+
+      - name: Hash output for reproducibility
+        run: |
+          echo "=== Reproducibility hashes ==="
+          find output/ -type f -exec sha256sum {} \; | sort -k2 > output-hashes.txt
+          sha256sum output-hashes.txt
+          echo ""
+          echo "Total files: $(wc -l < output-hashes.txt)"
+          head -20 output-hashes.txt
+
+      - name: Upload NDK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: monero-ndk-${{ github.sha }}
+          path: output/
+          retention-days: 30
+
+      - name: Upload hashes
+        uses: actions/upload-artifact@v4
+        with:
+          name: monero-ndk-hashes-${{ github.sha }}
+          path: output-hashes.txt
+          retention-days: 30
