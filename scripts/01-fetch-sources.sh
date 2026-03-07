@@ -79,9 +79,25 @@ fetch_repo "bionic" \
     "$BIONIC_URL" \
     "$BIONIC_COMMIT"
 
-fetch_repo "prebuilts-ndk" \
-    "$PREBUILTS_NDK_URL" \
-    "$PREBUILTS_NDK_COMMIT"
+fetch_repo "arm-optimized-routines" \
+    "$ARM_ROUTINES_URL" \
+    "$ARM_ROUTINES_COMMIT"
+
+fetch_repo "scudo" \
+    "$SCUDO_URL" \
+    "$SCUDO_COMMIT"
+
+fetch_repo "gwp_asan" \
+    "$GWP_ASAN_URL" \
+    "$GWP_ASAN_COMMIT"
+
+fetch_repo "system-core" \
+    "$SYSTEM_CORE_URL" \
+    "$SYSTEM_CORE_COMMIT"
+
+fetch_repo "system-logging" \
+    "$SYSTEM_LOGGING_URL" \
+    "$SYSTEM_LOGGING_COMMIT"
 
 echo ""
 echo "============================================"

@@ -12,8 +12,8 @@ llvm: fetch
 	@echo "=== Phase 2: Building LLVM/Clang ==="
 	bash scripts/02-build-llvm.sh
 
-sysroot: fetch
-	@echo "=== Phase 3: Assembling sysroot ==="
+sysroot: fetch llvm
+	@echo "=== Phase 3: Building sysroot from source ==="
 	bash scripts/03-build-sysroot.sh
 
 runtimes: llvm sysroot

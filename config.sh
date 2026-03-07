@@ -15,8 +15,21 @@ TOOLCHAIN_UTILS_COMMIT="d71e320ab860721f764fe7403588641c8a7bc65d"
 BIONIC_URL="https://android.googlesource.com/platform/bionic"
 BIONIC_COMMIT="a63b21091ada240d92f8ceadb1cabbdedaaab81b"
 
-PREBUILTS_NDK_URL="https://android.googlesource.com/platform/prebuilts/ndk"
-PREBUILTS_NDK_COMMIT="c0815fea3a8081be6215440de330c63246e6551f"
+# From-source sysroot dependencies (replaces prebuilts/ndk)
+ARM_ROUTINES_URL="https://android.googlesource.com/platform/external/arm-optimized-routines"
+ARM_ROUTINES_COMMIT="d7c644304e83c9bb92ede58c9c204d55f8157817"
+
+SCUDO_URL="https://android.googlesource.com/platform/external/scudo"
+SCUDO_COMMIT="1b55aeaa18248574e61a531a89439c20ee55379d"
+
+GWP_ASAN_URL="https://android.googlesource.com/platform/external/gwp_asan"
+GWP_ASAN_COMMIT="b302aa5039729da396909ef03e815160dab4448c"
+
+SYSTEM_CORE_URL="https://android.googlesource.com/platform/system/core"
+SYSTEM_CORE_COMMIT="a3b721a32242006b59cb12bd62c9133632af3a2d"
+
+SYSTEM_LOGGING_URL="https://android.googlesource.com/platform/system/logging"
+SYSTEM_LOGGING_COMMIT="bcac7c30d88a3773a7c0bc9f5617a23a886331fd"
 
 # Build configuration
 API_LEVEL="21"
