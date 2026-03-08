@@ -342,6 +342,7 @@ for arch in ${ARCHES}; do
         -D_LIBC=1
         -DANDROID
         -D__ANDROID__
+        -D__ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__
         -fPIC
         -O2
         -fno-builtin
@@ -355,6 +356,7 @@ for arch in ${ARCHES}; do
         -Wno-unused-const-variable
         -Wno-unused-variable
         -Wno-ignored-pragmas
+        -Wno-unguarded-availability
         -Werror=return-type
     )
 

@@ -162,10 +162,10 @@ for arch in ${ARCHES}; do
     sym_count=$(grep -c "void" "$stub_c" || echo 0)
     echo "        Generated ${sym_count} stub symbols"
 
-    # Compile stubs
+    # Compile stubs (use -fno-builtin -w to suppress builtin signature mismatch warnings)
     "$CC" --target="$target" \
         --sysroot="${SYSROOT_DIR}" \
-        -c -fPIC -O2 \
+        -c -fPIC -O2 -fno-builtin -w \
         "$stub_c" -o "${arch_build}/libc_stubs.o"
 
     # Also compile a few real bionic source files that are commonly
