@@ -33,11 +33,8 @@ echo "  Compiling CRT objects from bionic source"
 echo "============================================"
 echo ""
 
-# Common include directories
+# Common include directories (bionic internal headers not in sysroot)
 COMMON_INCLUDES=(
-    -I "${BIONIC_SRC}/libc/include"
-    -I "${BIONIC_SRC}/libc/kernel/uapi"
-    -I "${BIONIC_SRC}/libc/kernel/android/uapi"
     -I "${BIONIC_SRC}/libc/private"
     -I "${BIONIC_SRC}/libc/bionic"
     -I "${BIONIC_SRC}/libc/arch-common/bionic"
@@ -66,14 +63,15 @@ for arch in ${ARCHES}; do
         x86_64)  local_arch_dir="arch-x86_64" ;;
     esac
     ARCH_INCLUDES+=(-I "${BIONIC_SRC}/libc/${local_arch_dir}/include")
-    # Also add the sysroot's triple-specific include dir (contains asm/ headers)
-    ARCH_INCLUDES+=(-I "${SYSROOT_DIR}/usr/include/${triple}")
 
     # Common compiler flags
+    # Use --sysroot so clang treats our sysroot as the system root,
+    # making #include_next chains work correctly in bionic headers.
     # Note: --target=<triple><api> already defines __ANDROID_API__, so we don't
     # set it again to avoid a macro redefinition warning.
     COMMON_FLAGS=(
         --target="$target"
+        --sysroot="${SYSROOT_DIR}"
         -D_LIBC=1
         -DPLATFORM_SDK_VERSION=${API_LEVEL}
         -DANDROID

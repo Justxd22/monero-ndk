@@ -319,16 +319,14 @@ for arch in ${ARCHES}; do
 
     echo "[LIBM] Building for ${triple}..."
 
-    # Common include dirs
+    # Use --sysroot so clang treats our sysroot as the system root.
+    # This makes #include_next chains work correctly in bionic headers.
+    # Additional non-sysroot include dirs (FreeBSD internals) use -I.
     INCLUDE_FLAGS=(
         -I "${LIBM_SRC}/upstream-freebsd/android/include"
         -I "${LIBM_SRC}/upstream-freebsd/lib/msun/src"
         -I "${LIBM_SRC}"
-        -I "${BIONIC_SRC}/libc/include"
-        -I "${BIONIC_SRC}/libc/kernel/uapi"
-        -I "${BIONIC_SRC}/libc/kernel/android/uapi"
-        -I "${SYSROOT_DIR}/usr/include"
-        -I "${SYSROOT_DIR}/usr/include/${triple}"
+        -I "${BIONIC_SRC}/libc/private"
     )
 
     # 64-bit archs also need ld128 includes
@@ -338,6 +336,7 @@ for arch in ${ARCHES}; do
 
     COMMON_CFLAGS=(
         --target="$target"
+        --sysroot="${SYSROOT_DIR}"
         "${INCLUDE_FLAGS[@]}"
         -include "${LIBM_SRC}/freebsd-compat.h"
         -D_LIBC=1
@@ -427,11 +426,17 @@ for arch in ${ARCHES}; do
         fi
 
         if "$compiler" "${COMMON_CFLAGS[@]}" "${extra_flags[@]}" \
-            -c "$src_path" -o "$obj_path" 2>/dev/null; then
+            -c "$src_path" -o "$obj_path" 2>"${arch_build}/last_error.log"; then
             obj_files+=("$obj_path")
             compiled=$((compiled + 1))
         else
             echo "        [WARN] Failed to compile: $src"
+            # Show first error for debugging (only for the first failure)
+            if [[ $failed -eq 0 ]]; then
+                echo "        --- First compile error ---"
+                head -20 "${arch_build}/last_error.log" | sed 's/^/        /'
+                echo "        ---"
+            fi
             failed=$((failed + 1))
         fi
     done

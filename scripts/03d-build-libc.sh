@@ -164,8 +164,7 @@ for arch in ${ARCHES}; do
 
     # Compile stubs
     "$CC" --target="$target" \
-        -I "${SYSROOT_DIR}/usr/include" \
-        -I "${SYSROOT_DIR}/usr/include/${triple}" \
+        --sysroot="${SYSROOT_DIR}" \
         -c -fPIC -O2 \
         "$stub_c" -o "${arch_build}/libc_stubs.o"
 
@@ -176,11 +175,9 @@ for arch in ${ARCHES}; do
     # errno.cpp — needed by virtually everything
     if [ -f "${BIONIC_SRC}/libc/bionic/errno.cpp" ]; then
         if "$CC" --target="$target" \
-            -I "${BIONIC_SRC}/libc/include" \
+            --sysroot="${SYSROOT_DIR}" \
             -I "${BIONIC_SRC}/libc/private" \
-            -I "${BIONIC_SRC}/libc/kernel/uapi" \
-            -I "${BIONIC_SRC}/libc/kernel/android/uapi" \
-            -I "${SYSROOT_DIR}/usr/include/${triple}" \
+            -I "${BIONIC_SRC}/libc/bionic" \
             -D_LIBC=1 -DANDROID -D__ANDROID__ \
             -c -fPIC -O2 -std=c++17 -fno-exceptions -fno-rtti \
             "${BIONIC_SRC}/libc/bionic/errno.cpp" \
