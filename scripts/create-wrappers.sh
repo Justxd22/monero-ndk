@@ -38,16 +38,16 @@ for arch in ${ARCHES}; do
     triple="${WRAPPER_TRIPLE[$arch]}"
     target="${triple}${API_LEVEL}"
 
-    # Create clang wrapper
+    # Create clang wrapper (with API level suffix — this is the real script)
     create_wrapper "${target}-clang" "clang" "$target"
 
-    # Create clang++ wrapper
+    # Create clang++ wrapper (with API level suffix — this is the real script)
     create_wrapper "${target}-clang++" "clang++" "$target"
 
-    # Also create wrappers without API level suffix
-    # (android_ndk.json build steps create these: $BUILDLIB_HOST-clang)
-    create_wrapper "${triple}-clang" "clang" "$target"
-    create_wrapper "${triple}-clang++" "clang++" "$target"
+    # Create wrappers without API level suffix as symlinks to the API-level ones
+    # (symlinks avoid symlink_same.py dedup creating circular links)
+    ln -sf "${target}-clang" "${BIN_DIR}/${triple}-clang"
+    ln -sf "${target}-clang++" "${BIN_DIR}/${triple}-clang++"
 
     # Create gcc-compatible aliases (some build systems look for these)
     ln -sf "${target}-clang" "${BIN_DIR}/${triple}-gcc" 2>/dev/null || true
