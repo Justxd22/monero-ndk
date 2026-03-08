@@ -3,8 +3,10 @@ name: Build NDK from Source
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -93,11 +95,22 @@ jobs:
           echo "Total files: $(wc -l < output-hashes.txt)"
           head -20 output-hashes.txt
 
+      - name: Package release tarball
+        run: |
+          cd output
+          tar czf ../monero-ndk-linux.tar.gz .
+          cd ..
+          sha256sum monero-ndk-linux.tar.gz | tee monero-ndk-linux.tar.gz.sha256
+          echo "NDK_SHA256=$(sha256sum monero-ndk-linux.tar.gz | cut -d' ' -f1)" >> $GITHUB_ENV
+          ls -lh monero-ndk-linux.tar.gz
+
       - name: Upload NDK artifact
         uses: actions/upload-artifact@v4
         with:
           name: monero-ndk-${{ github.sha }}
-          path: output/
+          path: |
+            monero-ndk-linux.tar.gz
+            monero-ndk-linux.tar.gz.sha256
           retention-days: 30
 
       - name: Upload hashes
@@ -106,3 +119,27 @@ jobs:
           name: monero-ndk-hashes-${{ github.sha }}
           path: output-hashes.txt
           retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            monero-ndk-linux.tar.gz
+            monero-ndk-linux.tar.gz.sha256
+            output-hashes.txt
+          body: |
+            ## monero-ndk from source
+
+            Built entirely from AOSP source — no prebuilt binaries.
+
+            **Targets:** aarch64, armv7a, x86_64 (API level 21)
+            **SHA256:** `${{ env.NDK_SHA256 }}`
+
+            ### Usage with simplybs
+            Update `android_ndk.json` to point at this tarball.
+
+            ### Verify
+            ```
+            sha256sum -c monero-ndk-linux.tar.gz.sha256
+            ```
