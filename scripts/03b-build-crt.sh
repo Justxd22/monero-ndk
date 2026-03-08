@@ -66,13 +66,16 @@ for arch in ${ARCHES}; do
         x86_64)  local_arch_dir="arch-x86_64" ;;
     esac
     ARCH_INCLUDES+=(-I "${BIONIC_SRC}/libc/${local_arch_dir}/include")
+    # Also add the sysroot's triple-specific include dir (contains asm/ headers)
+    ARCH_INCLUDES+=(-I "${SYSROOT_DIR}/usr/include/${triple}")
 
     # Common compiler flags
+    # Note: --target=<triple><api> already defines __ANDROID_API__, so we don't
+    # set it again to avoid a macro redefinition warning.
     COMMON_FLAGS=(
         --target="$target"
         -D_LIBC=1
         -DPLATFORM_SDK_VERSION=${API_LEVEL}
-        -D__ANDROID_API__=${API_LEVEL}
         -DANDROID
         -D__ANDROID__
         "${ARCH_INCLUDES[@]}"

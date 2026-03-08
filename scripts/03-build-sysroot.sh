@@ -84,8 +84,15 @@ if [ -d "${BIONIC_SRC}/libc/kernel/android/uapi" ]; then
 fi
 
 # Arch-specific headers
+# Map our arch names to bionic's kernel UAPI asm directory names
+declare -A BIONIC_ASM_DIR
+BIONIC_ASM_DIR[aarch64]="asm-arm64"
+BIONIC_ASM_DIR[armv7a]="asm-arm"
+BIONIC_ASM_DIR[x86_64]="asm-x86"
+
 for arch in ${ARCHES}; do
     triple="${SYSROOT_TRIPLE[$arch]}"
+    bionic_asm="${BIONIC_ASM_DIR[$arch]}"
 
     # Map arch to bionic arch directory name
     bionic_arch_dir=""
@@ -97,19 +104,23 @@ for arch in ${ARCHES}; do
 
     mkdir -p "${SYSROOT_DIR}/usr/include/${triple}"
 
+    # Copy arch-specific libc headers (if they exist — modern bionic may not have these)
     if [ -d "${BIONIC_SRC}/libc/${bionic_arch_dir}/include" ]; then
         cp -a "${BIONIC_SRC}/libc/${bionic_arch_dir}/include/"* \
             "${SYSROOT_DIR}/usr/include/${triple}/"
         echo "        [OK] Arch headers: ${triple}"
-    else
-        echo "        [WARN] Missing arch headers: ${bionic_arch_dir}"
     fi
 
-    # Also copy arch-specific kernel UAPI headers
-    if [ -d "${BIONIC_SRC}/libc/kernel/uapi/asm-${arch}" ]; then
+    # Copy arch-specific kernel UAPI asm headers
+    # These contain <asm/types.h>, <asm/ioctl.h>, etc. needed by compiler-rt and libc
+    # bionic names: asm-arm64, asm-arm, asm-x86 (NOT asm-aarch64/asm-armv7a/asm-x86_64)
+    if [ -d "${BIONIC_SRC}/libc/kernel/uapi/${bionic_asm}/asm" ]; then
         mkdir -p "${SYSROOT_DIR}/usr/include/${triple}/asm"
-        cp -a "${BIONIC_SRC}/libc/kernel/uapi/asm-${arch}/"* \
-            "${SYSROOT_DIR}/usr/include/${triple}/asm/" 2>/dev/null || true
+        cp -a "${BIONIC_SRC}/libc/kernel/uapi/${bionic_asm}/asm/"* \
+            "${SYSROOT_DIR}/usr/include/${triple}/asm/"
+        echo "        [OK] Kernel asm headers: ${triple}/asm/ (from ${bionic_asm})"
+    else
+        echo "        [WARN] Missing kernel asm headers: ${bionic_asm}"
     fi
 done
 
@@ -139,9 +150,19 @@ echo ""
 echo "[CRT] Compiling CRT objects from bionic source..."
 bash "${SCRIPT_DIR}/03b-build-crt.sh"
 
-# ==== Step 4: Create minimal static library stubs ====
+# ==== Step 4: Build real static libraries ====
 echo ""
-echo "[STATIC] Creating static library stubs..."
+echo "[STATIC] Building static libraries from source..."
+
+# Build libm.a from FreeBSD/NetBSD math sources
+bash "${SCRIPT_DIR}/03c-build-libm.sh"
+
+# Build libc.a from map-file stubs (provides symbol resolution for cross-compilation)
+bash "${SCRIPT_DIR}/03d-build-libc.sh"
+
+# Build remaining minimal stubs for libdl.a and libstdc++.a
+echo ""
+echo "[STATIC] Building libdl.a and libstdc++.a stubs..."
 
 for arch in ${ARCHES}; do
     triple="${SYSROOT_TRIPLE[$arch]}"
@@ -150,11 +171,10 @@ for arch in ${ARCHES}; do
 
     mkdir -p "$lib_dir"
 
-    # Create minimal libdl.a — just one stub object
-    # libdl only has a few symbols, and they're all stubs in Android
     stub_dir="${BUILD_DIR}/static-stubs/${arch}"
     mkdir -p "$stub_dir"
 
+    # Create minimal libdl.a
     cat > "${stub_dir}/libdl_stub.c" <<'EOF'
 // Minimal libdl.a stub
 void* dlopen(const char* filename, int flag) { return 0; }
@@ -168,29 +188,6 @@ EOF
         "${stub_dir}/libdl_stub.c" -o "${stub_dir}/libdl_stub.o"
     "${LLVM_BIN}/llvm-ar" rcs "${lib_dir}/libdl.a" "${stub_dir}/libdl_stub.o"
     echo "        [OK] ${triple}/libdl.a"
-
-    # Create minimal libc.a stub
-    # This is a placeholder — real libc.a would be built by 03d-build-libc.sh
-    # For now, create a minimal one that allows linking
-    cat > "${stub_dir}/libc_stub.c" <<'EOF'
-// Minimal libc.a stub — the real implementation is on the Android device
-// This satisfies the linker for static linking references
-EOF
-
-    "${LLVM_BIN}/clang" --target="$target" -c -fPIC -O2 \
-        "${stub_dir}/libc_stub.c" -o "${stub_dir}/libc_stub.o"
-    "${LLVM_BIN}/llvm-ar" rcs "${lib_dir}/libc.a" "${stub_dir}/libc_stub.o"
-    echo "        [OK] ${triple}/libc.a"
-
-    # Create minimal libm.a stub
-    cat > "${stub_dir}/libm_stub.c" <<'EOF'
-// Minimal libm.a stub
-EOF
-
-    "${LLVM_BIN}/clang" --target="$target" -c -fPIC -O2 \
-        "${stub_dir}/libm_stub.c" -o "${stub_dir}/libm_stub.o"
-    "${LLVM_BIN}/llvm-ar" rcs "${lib_dir}/libm.a" "${stub_dir}/libm_stub.o"
-    echo "        [OK] ${triple}/libm.a"
 
     # Create minimal libstdc++.a stub
     cat > "${stub_dir}/libstdcpp_stub.c" <<'EOF'

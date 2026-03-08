@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: output/sysroot/
-          key: sysroot-build-${{ hashFiles('config.sh', 'scripts/03-build-sysroot.sh', 'scripts/03a-generate-stubs.sh', 'scripts/03b-build-crt.sh') }}
+          key: sysroot-build-${{ hashFiles('config.sh', 'scripts/03-build-sysroot.sh', 'scripts/03a-generate-stubs.sh', 'scripts/03b-build-crt.sh', 'scripts/03c-build-libm.sh', 'scripts/03d-build-libc.sh') }}
 
       - name: Build sysroot
         run: make sysroot
@@ -73,7 +73,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: output/sysroot/
-          key: sysroot-build-${{ hashFiles('config.sh', 'scripts/03-build-sysroot.sh', 'scripts/03a-generate-stubs.sh', 'scripts/03b-build-crt.sh') }}
+          key: sysroot-build-${{ hashFiles('config.sh', 'scripts/03-build-sysroot.sh', 'scripts/03a-generate-stubs.sh', 'scripts/03b-build-crt.sh', 'scripts/03c-build-libm.sh', 'scripts/03d-build-libc.sh') }}
 
       - name: Build runtimes
         run: make runtimes
