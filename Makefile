@@ -1,18 +1,23 @@
 include config.mk
 
-.PHONY: all fetch llvm sysroot runtimes assemble verify clean
+.PHONY: all full fetch llvm sysroot runtimes assemble verify clean
 
-all: fetch llvm sysroot runtimes assemble verify
+# Build everything from already-present sources (no network).
+# Sources must already exist under $(SOURCES_DIR)
+all: llvm sysroot runtimes assemble verify
+
+# Convenience target for standalone builds: fetch sources then build.
+full: fetch all
 
 fetch:
 	@echo "=== Phase 1: Fetching sources ==="
 	bash scripts/01-fetch-sources.sh
 
-llvm: fetch
+llvm:
 	@echo "=== Phase 2: Building LLVM/Clang ==="
 	bash scripts/02-build-llvm.sh
 
-sysroot: fetch llvm
+sysroot: llvm
 	@echo "=== Phase 3: Building sysroot from source ==="
 	bash scripts/03-build-sysroot.sh
 
