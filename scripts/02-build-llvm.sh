@@ -37,13 +37,15 @@ if [ -f "$PATCH_MARKER" ]; then
 else
     if [ -f "${LLVM_ANDROID_SRC}/patches/PATCHES.json" ] && \
        [ -f "${TOOLCHAIN_UTILS_SRC}/llvm_tools/patch_manager.py" ]; then
+        if ! command -v patch &>/dev/null; then
+            echo "[ERROR] GNU 'patch' not found on PATH — required to apply AOSP patches" >&2
+            exit 1
+        fi
         cd "${LLVM_ANDROID_SRC}"
         python3 "${TOOLCHAIN_UTILS_SRC}/llvm_tools/patch_manager.py" \
             --patch_metadata_file=patches/PATCHES.json \
             --src_path="${LLVM_SRC}" \
-            --svn_version="${SVN_REVISION}" || {
-                echo "[WARN] Some patches may have failed — continuing anyway"
-            }
+            --svn_version="${SVN_REVISION}"
         touch "$PATCH_MARKER"
         echo "[OK]   Patches applied"
     else
@@ -60,6 +62,12 @@ mkdir -p "$BUILD_DIR"
 CMAKE_FLAGS=(
     -DCMAKE_BUILD_TYPE=Release
     -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+    # LLVM 19 headers use uint64_t etc. without including <cstdint>, relying
+    # on transitive includes that libc++ >= 19 no longer provides (breaks with
+    # the simplybs bootstrap clang). Passing -DCMAKE_CXX_FLAGS also discards
+    # the CXXFLAGS env var, so fold it back in.
+    -DCMAKE_CXX_FLAGS="${CXXFLAGS:-} -include cstdint"
 
     # Only build what we need
     -DLLVM_ENABLE_PROJECTS="clang;lld"
